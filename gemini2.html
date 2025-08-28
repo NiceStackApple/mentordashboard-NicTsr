@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MentorDashboard — Final (XP Surge Update)</title>
+<style>
+  :root{ --bg:#0b0b0c; --card:#111; --muted:#9aa0a6; --accent:#8b5cf6; --glass:rgba(255,255,255,0.03); }
+  *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;font-size:14px;color:#e6eef8}
+  body{margin:0;background:linear-gradient(180deg,#070708 0%, #0b0b0c 100%);padding:20px;min-height:100vh}
+  .container{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+  .card{background:linear-gradient(180deg,var(--card), rgba(17,17,17,0.9));padding:18px;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
+  header{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent), #4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700}
+  h1{margin:0;font-size:18px;letter-spacing:0.2px}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+  .focus{margin-bottom:14px}
+  .quest-list{display:flex;flex-direction:column;gap:10px}
+  .quest{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+  button.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:#e6eef8;cursor:pointer;transition:all .2s ease}
+  button.primary{background:linear-gradient(90deg,var(--accent), #6366f1);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .2s ease}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;cursor:pointer;transition:all .2s ease}
+  button.btn:hover, button.primary:hover, .btn-ghost:hover{background:rgba(139,92,246,0.12);border-color:var(--accent);transform:translateY(-2px)}
+  button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  button:disabled:hover{transform:none;background:inherit;border-color:inherit}
+  .small{font-size:13px;color:var(--muted)}
+  .xpbar{height:12px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-top:8px}
+  .xpfill{height:100%;background:linear-gradient(90deg,#7c3aed,#06b6d4);width:0%}
+  .rightcol{display:flex;flex-direction:column;gap:12px}
+  .habit{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+  .streak{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-weight:700}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{padding:6px 10px;border-radius:8px;background:linear-gradient(90deg,#111827,#0b1220);border:1px solid rgba(255,255,255,0.03);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;width:100%;text-align:center;}
+  .badge.locked{opacity:0.8;}
+  .badge.unlocked{border-color:var(--accent); opacity: 1;}
+  .badge-title{font-weight:bold;}
+  .badge-progress-bar{width:80%;height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-top:4px;}
+  .badge-progress-fill{height:100%;background:var(--accent);width:0%;}
+  .badge .tooltip{visibility:hidden;width:200px;background-color:#0b0b0c;color:#fff;text-align:center;border-radius:6px;padding:8px;position:absolute;z-index:1;bottom:125%;left:50%;margin-left:-100px;opacity:0;transition:opacity 0.3s;border:1px solid rgba(255,255,255,0.1);}
+  .badge:hover .tooltip{visibility:visible;opacity:1;}
+  .chart{height:140px;background:linear-gradient(180deg,transparent,rgba(255,255,255,0.02));display:flex;align-items:center;justify-content:center;border-radius:8px}
+  footer.small{color:var(--muted);margin-top:8px}
+  .row{display:flex;gap:8px}
+  .flexcol{display:flex;flex-direction:column;gap:8px}
+  .calendar{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
+  .month-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cell{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;background:transparent}
+  .cell:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+  .cell.active{background:linear-gradient(90deg,#05966933,#06b6d433);border:1px solid rgba(6,182,212,0.25);font-weight:700;color:#fff}
+  .cell.today{box-shadow:0 6px 18px rgba(99,102,241,0.08);border:1px solid var(--accent);}
+  .legend{display:flex;gap:6px;align-items:center;margin-top:8px}
+  .dot{width:10px;height:10px;border-radius:99px;background:#10b981}
+  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#081018;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);min-width:300px;z-index:60}
+  .overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:50}
+  .tabs{display:flex;gap:8px;margin-top:12px;margin-bottom:8px;}
+  .notification{position:fixed;bottom:20px;right:20px;background:linear-gradient(90deg,var(--accent), #6366f1);padding:12px 18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:100;opacity:0;transform:translateY(20px);transition:all .3s ease}
+  .notification.show{opacity:1;transform:translateY(0)}
+  .todo-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .todo-item{display:flex;gap:8px;align-items:center}
+  .todo-item input[type="checkbox"]{width:18px;height:18px}
+  input[type="text"]{background: var(--glass);border: 1px solid rgba(255,255,255,0.1);color: #e6eef8;padding: 8px 12px;border-radius: 8px;width: 100%;transition: all 0.2s ease;}
+  input[type="text"]:focus {outline: none;border-color: var(--accent);box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);}
+  .today{font-weight:700;color:#fff; font-size: 18px;}
+  .levelpill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="notification-area"></div>
+
+<div class="container">
+  <div class="card">
+    <header>
+      <div class="logo">MD</div>
+      <div>
+        <h1>MentorDashboard — Final</h1>
+        <p class="lead">Gamified dashboard with streaks, levels, and achievement badges.</p>
+      </div>
+    </header>
+
+    <section class="focus">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px;">
+        <div>
+          <div class="small" id="dateDisplay">Hari ini</div>
+          <div class="today" id="todayFocusTitle" style="margin-top:4px;">...</div>
+          <div class="small muted" id="todayFocusDesc">...</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="small">Level <span id="levelNum">1</span></div>
+          <div class="levelpill" id="xpTxt" style="font-size: 18px; font-weight: bold; margin-top:4px; display: inline-block;">0 XP</div>
+        </div>
+      </div>
+      <div class="xpbar" style="width:100%;"><div class="xpfill" id="xpFill"></div></div>
+    </section>
+
+    <section>
+      <h3 style="margin:8px 0">Daily Quests</h3>
+      <div class="quest-list" id="questList"></div>
+    </section>
+
+    <section style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="small">Academic Quest (pilih difficulty)</div>
+        <div class="kecil muted">Easy +5 • Medium +10 • Hard +15</div>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="completeAcademic('Easy')">Latihan</button>
+        <button class="btn" onclick="completeAcademic('Medium')">Review Materi</button>
+        <button class="btn" onclick="completeAcademic('Hard')">Materi Baru</button>
+        <button class="btn" onclick="resetData()">Reset Data</button>
+      </div>
+    </section>
+
+    <section style="margin-top:14px" class="center">
+      <div style="width:100%">
+        <div class="small">Grafik XP Mingguan</div>
+        <canvas id="xpChart" width="760" height="140" style="width:100%;height:140px;border-radius:8px;background:transparent"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <aside class="rightcol">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="small">Habits & Streaks</div>
+        <div class="small muted">Streak diperhitungkan harian</div>
+      </div>
+      <div class="flexcol" id="streaksDisplay"></div>
+      
+      <div id="calendarWrap" style="margin-top:10px" class="calendar">
+        <div class="month-head">
+          <div class="small" id="monthLabel">Bulan</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="prevMonth()">‹</button>
+            <button class="btn" onclick="nextMonth()">›</button>
+          </div>
+        </div>
+        <div class="grid" id="calGrid"></div>
+        <div class="legend"><div class="dot"></div><div class="small">Semua habit selesai</div></div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <div class="small">Badges</div>
+        <div class="small muted" id="badgeCounter">0</div>
+      </div>
+      <div class="flexcol" id="badgesArea" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="small">To-do</div>
+        <div class="small muted" id="todoCounter">0 Pending</div>
+      </div>
+      <div style="margin-top:8px">
+        <div style="display:flex;gap:8px">
+          <input id="newTodo" placeholder="Tambah tugas..." type="text" onkeydown="if(event.key==='Enter') addTodo()"/>
+          <button class="btn" onclick="addTodo()">Add</button>
+        </div>
+        <div class="tabs">
+          <button class="btn primary" id="btnPending" onclick="setTodoFilter('pending')">Pending</button>
+          <button class="btn" id="btnDone" onclick="setTodoFilter('done')">Done</button>
+        </div>
+        <div class="todo-list" id="todoList"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ===================================================================================
+// ============================= DATABASE & KONFIGURASI ==============================
+// ===================================================================================
+
+const BADGE_DATABASE = {
+  // 1. To-do Streak
+  'todo_streak_3':   { icon: '🔥', title: 'On Fire', desc: 'Menyelesaikan to-do 3 hari beruntun.', trigger: { type: 'todo_streak', value: 3 } },
+  'todo_streak_7':   { icon: '🎯', title: 'Focused', desc: 'Menyelesaikan to-do 7 hari beruntun.', trigger: { type: 'todo_streak', value: 7 } },
+  'todo_streak_30':  { icon: '⚡', title: 'Consistent', desc: 'Menyelesaikan to-do 30 hari beruntun.', trigger: { type: 'todo_streak', value: 30 } },
+  // 2. Task Completion
+  'todo_total_10':   { icon: '✅', title: 'Task Initiator', desc: 'Menyelesaikan total 10 to-do.', trigger: { type: 'total_todos', value: 10 } },
+  'todo_total_50':   { icon: '📈', title: 'Task Executor', desc: 'Menyelesaikan total 50 to-do.', trigger: { type: 'total_todos', value: 50 } },
+  'todo_total_100':  { icon: '🚀', title: 'Task Master', desc: 'Menyelesaikan total 100 to-do.', trigger: { type: 'total_todos', value: 100 } },
+  // 3. Habits Streak
+  'habit_streak_7':  { icon: '🌱', title: 'Seed of Discipline', desc: 'Menyelesaikan semua habit 7 hari beruntun.', trigger: { type: 'habit_streak', value: 7 } },
+  'habit_streak_30': { icon: '🌳', title: 'Tree of Habit', desc: 'Menyelesaikan semua habit 30 hari beruntun.', trigger: { type: 'habit_streak', value: 30 } },
+  // 4. Level Badges
+  'level_10':  { icon: '🛠️', title: 'Apprentice', desc: 'Mencapai Level 10.', trigger: { type: 'level', value: 10 } },
+  'level_25':  { icon: '🎓', title: 'Specialist', desc: 'Mencapai Level 25.', trigger: { type: 'level', value: 25 } },
+  'level_50':  { icon: '👨‍🏫', title: 'Mentor', desc: 'Mencapai Level 50.', trigger: { type: 'level', value: 50 } },
+  // 5. Academic Quest
+  'aq_total_10':   { icon: '📖', title: 'Bookworm', desc: 'Menyelesaikan 10 Quest Akademik.', trigger: { type: 'total_aq', value: 10 } },
+  'aq_total_50':   { icon: '🧑‍🔬', title: 'Researcher', desc: 'Menyelesaikan 50 Quest Akademik.', trigger: { type: 'total_aq', value: 50 } },
+  'aq_total_100':  { icon: '🎓', title: 'Scholar', desc: 'Menyelesaikan 100 Quest Akademik.', trigger: { type: 'total_aq', value: 100 } },
+  // 6. PERUBAHAN: Kategori Badge XP Surge
+  'xp_surge_1':   { icon: '�', title: 'XP Surge', desc: 'Mendapatkan >200 XP dalam sehari.', trigger: { type: 'high_xp_days', value: 1 } },
+  'xp_surge_5':   { icon: '🌠', title: 'XP Comet', desc: 'Mencapai 5 hari XP Surge.', trigger: { type: 'high_xp_days', value: 5 } },
+  'xp_surge_15':  { icon: '🌟', title: 'XP Supernova', desc: 'Mencapai 15 hari XP Surge.', trigger: { type: 'high_xp_days', value: 15 } },
+  'xp_surge_30':  { icon: '🌌', title: 'XP Galaxy', desc: 'Mencapai 30 hari XP Surge.', trigger: { type: 'high_xp_days', value: 30 } },
+};
+
+const BADGE_CATEGORIES = {
+    'todo_streak': {title: 'To-do Streak', keys: ['todo_streak_3', 'todo_streak_7', 'todo_streak_30']},
+    'total_todos': {title: 'Task Completion', keys: ['todo_total_10', 'todo_total_50', 'todo_total_100']},
+    'habit_streak': {title: 'Habits Streak', keys: ['habit_streak_7', 'habit_streak_30']},
+    'level': {title: 'Level Up', keys: ['level_10', 'level_25', 'level_50']},
+    'total_aq': {title: 'Academic Quests', keys: ['aq_total_10', 'aq_total_50', 'aq_total_100']},
+    'high_xp_days': {title: 'XP Surge', keys: ['xp_surge_1', 'xp_surge_5', 'xp_surge_15', 'xp_surge_30']},
+};
+
+const HABITS = [
+  {id:'sholat', label:'Sholat 5 Waktu', desc: 'Menjaga rutinitas ibadah & disiplin waktu.', xp:5},
+  {id:'olahraga', label:'Olahraga 20 Menit', desc: 'Aktivitas fisik untuk kesehatan & energi.', xp:5},
+  {id:'meditasi', label:'Meditasi 10 Menit', desc: 'Latihan mindfulness untuk mengurangi stres.', xp:5},
+  {id:'air', label:'Minum Air Putih 2L', desc: 'Menjaga hidrasi tubuh agar tetap segar.', xp:5},
+  {id:'belajar', label:'Belajar Hal Baru 20 Menit', desc: 'Dedikasikan waktu untuk upgrade diri.', xp:5},
+  {id:'todo', label:'Selesaikan 3 To-do List', desc: 'Minimal 3 tugas selesai agar produktif.', xp:5},
+  {id:'journal', label:'Journaling', desc: 'Menulis refleksi singkat di malam hari.', xp:5}
+];
+
+const focusMap = {
+  'Senin': 'MTK — Selesaikan 20 soal',
+  'Kamis': 'MTK — Selesaikan 20 soal',
+  'Selasa': 'Dicoding (Python/ML) — Selesaikan 1 modul / 30 menit coding',
+  'Jumat': 'Dicoding (Python/ML) — Selesaikan 1 modul / 30 menit coding',
+  'Rabu': 'TOEFL / TKA — 1 section TOEFL + 15 soal TKA',
+  'Sabtu': 'TOEFL / TKA — 1 section TOEFL + 15 soal TKA',
+  'Minggu': 'Review ringan / ringkasan mingguan'
+};
+
+const STORAGE_KEY = 'mentor_dashboard_v6_data'; // Versi baru
+let DATA = loadData();
+let todoFilter = 'pending';
+let calendarView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+
+// ===================================================================================
+// ============================= FUNGSI DATA & UTILITAS ==============================
+// ===================================================================================
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) return JSON.parse(raw);
+  const init = {
+    xp:0, level:1, dayOffset:0,
+    mainQuestStreak: 0, lastMainQuestDate: null,
+    habitsStreak: 0, lastHabitsDate: null,
+    todoStreak: 0, lastTodoDate: null,
+    totalTodosCompleted: 0,
+    totalAcademicQuestsCompleted: 0,
+    highXpDaysCount: 0, // PERUBAHAN: Mengganti perfectDaysCount
+    unlockedBadges: [],
+    habits:{}, todos: [], xpHistory: {}, dailyHabits: {}
+  };
+  HABITS.forEach(h=> init.habits[h.id] = {done:false});
+  return init;
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
+function todayDateObj(){ const d = new Date(); d.setDate(d.getDate() + (DATA.dayOffset||0)); return d; }
+
+function dateStr(d) {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function computeLevel(xp){ return Math.floor(xp/100)+1; }
+
+// ===================================================================================
+// ============================= FUNGSI-FUNGSI RENDER UTAMA ==========================
+// ===================================================================================
+
+function render(){
+  checkAllBadges();
+  const d = todayDateObj();
+  const dayName = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];
+  
+  document.getElementById('dateDisplay').textContent = `Hari ini (${d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })})`;
+  
+  const focusText = focusMap[dayName] || 'Waktu Istirahat';
+  const [focusTitle, focusDesc] = focusText.split('—').map(s => s.trim());
+  document.getElementById('todayFocusTitle').textContent = focusTitle;
+  document.getElementById('todayFocusDesc').textContent = focusDesc || '';
+
+  document.getElementById('levelNum').textContent = computeLevel(DATA.xp);
+  document.getElementById('xpTxt').textContent = DATA.xp + ' XP';
+  document.getElementById('xpFill').style.width = Math.min(100, (DATA.xp % 100)) + '%';
+  
+  renderQuests();
+  renderStreaks();
+  renderBadges();
+  renderTodo();
+  renderCalendar();
+  renderChart();
+}
+
+function renderQuests() {
+    const qlist = document.getElementById('questList');
+    qlist.innerHTML = '';
+    const d = todayDateObj();
+    const todayStr = dateStr(d);
+    const dayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][d.getDay()];
+    const academicDone = !!(DATA.dailyHabits[todayStr] && DATA.dailyHabits[todayStr].academic);
+    
+    const mainQ = document.createElement('div');
+    mainQ.className = 'quest';
+    mainQ.innerHTML = `<div><div style="font-weight:700">Quest Utama</div><div class="small">${focusMap[dayName]}</div></div><div><button class="primary" ${academicDone ? 'disabled' : ''} onclick="completeMainQuest()">${academicDone ? 'Selesai' : 'Kerjakan'}</button></div>`;
+    qlist.appendChild(mainQ);
+
+    HABITS.forEach(h => {
+        const el = document.createElement('div');
+        el.className = 'quest';
+        const habitState = DATA.habits[h.id] || {done: false};
+        el.innerHTML = `<div><div style="font-weight:700">${h.label}</div><div class="small" style="margin-top:2px;">${h.desc}</div><div class="small" style="margin-top:4px;">XP: ${h.xp}</div></div><div><button class="btn" ${habitState.done ? 'disabled' : ''} onclick="toggleHabit('${h.id}')">${habitState.done ? 'Selesai' : 'Kerjakan'}</button></div>`;
+        qlist.appendChild(el);
+    });
+}
+
+function renderStreaks() {
+    const streaksDisplay = document.getElementById('streaksDisplay');
+    streaksDisplay.innerHTML = '';
+    streaksDisplay.innerHTML = `
+        <div class="habit">
+            <div><div style="font-weight:700">Streak Quest Utama</div><div class="small">Selesaikan Academic Quest</div></div>
+            <div class="streak">${DATA.mainQuestStreak || 0}🔥</div>
+        </div>
+        <div class="habit">
+            <div><div style="font-weight:700">Streak Habits Harian</div><div class="small">Selesaikan semua daily habits</div></div>
+            <div class="streak">${DATA.habitsStreak || 0}🔥</div>
+        </div>
+    `;
+}
+
+function renderBadges() {
+    const badgesArea = document.getElementById('badgesArea');
+    const badgeCounter = document.getElementById('badgeCounter');
+    badgesArea.innerHTML = '';
+    let unlockedCount = DATA.unlockedBadges.length;
+    
+    for (const categoryKey in BADGE_CATEGORIES) {
+        const category = BADGE_CATEGORIES[categoryKey];
+        const badgeKeys = category.keys;
+        
+        let highestUnlockedIndex = -1;
+        badgeKeys.forEach((key, index) => {
+            if (DATA.unlockedBadges.includes(key)) highestUnlockedIndex = index;
+        });
+
+        const nextBadgeKey = badgeKeys[highestUnlockedIndex + 1];
+        if (!nextBadgeKey) {
+            const lastBadgeKey = badgeKeys[badgeKeys.length - 1];
+            const lastBadge = BADGE_DATABASE[lastBadgeKey];
+            const b = document.createElement('div');
+            b.className = 'badge unlocked';
+            b.innerHTML = `<div class="badge-title">${lastBadge.icon} ${lastBadge.title}</div><div class="small">Completed!</div><span class="tooltip">${lastBadge.desc}</span>`;
+            badgesArea.appendChild(b);
+            continue;
+        };
+
+        const nextBadge = BADGE_DATABASE[nextBadgeKey];
+        const triggerType = nextBadge.trigger.type;
+        const goal = nextBadge.trigger.value;
+        let current = 0;
+        
+        switch (triggerType) {
+            case 'todo_streak': current = DATA.todoStreak; break;
+            case 'total_todos': current = DATA.totalTodosCompleted; break;
+            case 'habit_streak': current = DATA.habitsStreak; break;
+            case 'level': current = computeLevel(DATA.xp); break;
+            case 'total_aq': current = DATA.totalAcademicQuestsCompleted; break;
+            case 'high_xp_days': current = DATA.highXpDaysCount; break;
+        }
+
+        const b = document.createElement('div');
+        b.className = 'badge locked';
+        const progressPct = Math.min(100, (current / goal) * 100);
+        b.innerHTML = `<div class="badge-title">${nextBadge.icon} ${nextBadge.title}</div><div class="small">${current}/${goal}</div><div class="badge-progress-bar"><div class="badge-progress-fill" style="width:${progressPct}%"></div></div><span class="tooltip">${nextBadge.desc}</span>`;
+        badgesArea.appendChild(b);
+    }
+    badgeCounter.textContent = `${unlockedCount}/${Object.keys(BADGE_DATABASE).length}`;
+}
+
+function renderTodo() {
+    const todoList = document.getElementById('todoList');
+    todoList.innerHTML = '';
+    document.getElementById('btnPending').classList.toggle('primary', todoFilter === 'pending');
+    document.getElementById('btnDone').classList.toggle('primary', todoFilter === 'done');
+
+    DATA.todos.forEach((t, i) => {
+        const shouldShow = (todoFilter === 'pending' && !t.done) || (todoFilter === 'done' && t.done);
+        if (shouldShow) {
+            const div = document.createElement('div');
+            div.className = 'todo-item';
+            div.innerHTML = `<input type="checkbox" ${t.done ? 'checked disabled' : ''} onchange="toggleTodo(${i})"/><div style="flex:1;text-decoration:${t.done ? 'line-through' : 'none'};color:${t.done ? '#9aa0a6' : '#e6eef8'}">${t.text}</div><div><button class="btn-ghost" style="padding:4px 8px;font-size:12px" onclick="removeTodo(${i})">x</button></div>`;
+            todoList.appendChild(div);
+        }
+    });
+    const pendingCount = DATA.todos.filter(t => !t.done).length;
+    document.getElementById('todoCounter').textContent = `${pendingCount} Pending`;
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    const y = calendarView.year; const m = calendarView.month;
+    const first = new Date(y,m,1);
+    const startDay = first.getDay();
+    const total = new Date(y,m+1,0).getDate();
+    document.getElementById('monthLabel').textContent = first.toLocaleString('id-ID', {month:'long', year:'numeric'});
+
+    for(let i=0;i<startDay;i++){ grid.insertAdjacentHTML('beforeend', '<div class="cell"></div>'); }
+
+    for(let day=1; day<=total; day++){
+        const d = new Date(y,m,day);
+        const key = dateStr(d);
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = day;
+        if(key === dateStr(todayDateObj())) cell.classList.add('today');
+        const dh = DATA.dailyHabits[key] || {};
+        const allDone = HABITS.every(h=> !!dh[h.id]);
+        if(allDone) cell.classList.add('active');
+        grid.appendChild(cell);
+    }
+}
+
+function renderChart() {
+  const canvas = document.getElementById('xpChart');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const arr = [];
+  for(let i=6;i>=0;i--){ const d = new Date(todayDateObj()); d.setDate(d.getDate()-i); const key = dateStr(d); arr.push(DATA.xpHistory[key] || 0); }
+  const w = canvas.width; const h = canvas.height; const pad = 30;
+  const max = Math.max(10, ...arr);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+  for(let g=0;g<=4;g++){ const y = pad + (h-2*pad) * (g/4); ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w-pad,y); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '11px Inter, sans-serif';
+  for(let i=0;i<7;i++){ const d = new Date(todayDateObj()); d.setDate(d.getDate()-(6-i)); const lab = ['M','S','S','R','K','J','S'][d.getDay()]; const x = pad + ( (w-2*pad) * (i / 6) ); ctx.fillText(lab, x-6, h-pad+16); }
+  ctx.beginPath();
+  for(let i=0;i<7;i++){ const x = pad + ( (w-2*pad) * (i / 6) ); const y = pad + (h-2*pad) * (1 - (arr[i]/max)); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  ctx.strokeStyle = 'rgba(124,58,237,0.95)'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.lineTo(w-pad, h-pad); ctx.lineTo(pad, h-pad); ctx.closePath();
+  const grd = ctx.createLinearGradient(0,0,0,h); grd.addColorStop(0,'rgba(124,58,237,0.18)'); grd.addColorStop(1,'rgba(124,58,237,0.01)'); ctx.fillStyle = grd; ctx.fill();
+  for(let i=0;i<7;i++){ const x = pad + ( (w-2*pad) * (i / 6) ); const y = pad + (h-2*pad) * (1 - (arr[i]/max)); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font='11px Inter'; ctx.fillText(arr[i], x-8, y-10); }
+}
+
+// ===================================================================================
+// ======================== FUNGSI AKSI & LOGIC APLIKASI =============================
+// ===================================================================================
+
+function checkAllBadges() {
+  const currentLevel = computeLevel(DATA.xp);
+  for (const key in BADGE_DATABASE) {
+    if (DATA.unlockedBadges.includes(key)) continue;
+    const badge = BADGE_DATABASE[key];
+    let conditionMet = false;
+    switch (badge.trigger.type) {
+      case 'todo_streak': conditionMet = DATA.todoStreak >= badge.trigger.value; break;
+      case 'total_todos': conditionMet = DATA.totalTodosCompleted >= badge.trigger.value; break;
+      case 'habit_streak': conditionMet = DATA.habitsStreak >= badge.trigger.value; break;
+      case 'level': conditionMet = currentLevel >= badge.trigger.value; break;
+      case 'total_aq': conditionMet = DATA.totalAcademicQuestsCompleted >= badge.trigger.value; break;
+      case 'high_xp_days': conditionMet = DATA.highXpDaysCount >= badge.trigger.value; break;
+    }
+    if (conditionMet) unlockBadge(key);
+  }
+}
+
+function unlockBadge(key) {
+  if (DATA.unlockedBadges.includes(key)) return;
+  DATA.unlockedBadges.push(key);
+  const badge = BADGE_DATABASE[key];
+  showNotification(`Badge Terbuka: ${badge.icon} ${badge.title}`);
+}
+
+function showNotification(message) {
+  const notif = document.createElement('div');
+  notif.className = 'notification';
+  notif.textContent = message;
+  document.getElementById('notification-area').appendChild(notif);
+  setTimeout(() => { notif.classList.add('show'); }, 10);
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => { notif.remove(); }, 300);
+  }, 4000);
+}
+
+function completeMainQuest() { completeAcademic('Medium'); }
+
+function completeAcademic(level) {
+    const today = dateStr(todayDateObj());
+    const xpGain = {'Easy':5,'Medium':10,'Hard':15}[level] || 10;
+    DATA.xp += xpGain;
+    DATA.xpHistory[today] = (DATA.xpHistory[today] || 0) + xpGain;
+    DATA.totalAcademicQuestsCompleted++;
+    
+    if (!(DATA.dailyHabits[today] && DATA.dailyHabits[today].academic)) {
+        const yesterday = dateStr(new Date(new Date().setDate(todayDateObj().getDate() - 1)));
+        if (DATA.lastMainQuestDate === yesterday) { DATA.mainQuestStreak++; } 
+        else if (DATA.lastMainQuestDate !== today) { DATA.mainQuestStreak = 1; }
+        DATA.lastMainQuestDate = today;
+        if(!DATA.dailyHabits[today]) DATA.dailyHabits[today] = {};
+        DATA.dailyHabits[today].academic = true;
+    }
+    saveData();
+    render();
+}
+
+function toggleHabit(id) {
+  const h = DATA.habits[id];
+  if (!h || h.done) return;
+  h.done = true;
+  const today = dateStr(todayDateObj());
+  if(!DATA.dailyHabits[today]) DATA.dailyHabits[today] = {};
+  DATA.dailyHabits[today][id] = true;
+
+  const xpGain = (HABITS.find(x=>x.id===id).xp || 5);
+  DATA.xp += xpGain;
+  DATA.xpHistory[today] = (DATA.xpHistory[today] || 0) + xpGain;
+  
+  const allHabitsDoneToday = HABITS.every(habit => DATA.habits[habit.id] && DATA.habits[habit.id].done);
+  if (allHabitsDoneToday) {
+    const yesterday = dateStr(new Date(new Date().setDate(todayDateObj().getDate() - 1)));
+    if (DATA.lastHabitsDate === yesterday) { DATA.habitsStreak++; } 
+    else if (DATA.lastHabitsDate !== today) { DATA.habitsStreak = 1; }
+    DATA.lastHabitsDate = today;
+  }
+  saveData();
+  render();
+}
+
+function addTodo(){
+  const input = document.getElementById('newTodo');
+  if(!input.value.trim()) return;
+  DATA.todos.push({text:input.value.trim(),done:false});
+  input.value = '';
+  setTodoFilter('pending');
+  saveData();
+  render();
+}
+
+function removeTodo(i){ DATA.todos.splice(i,1); saveData(); render(); }
+
+function toggleTodo(i) {
+  if (DATA.todos[i].done) return;
+  DATA.todos[i].done = true;
+  DATA.totalTodosCompleted++;
+
+  const today = dateStr(todayDateObj());
+  const yesterday = dateStr(new Date(new Date().setDate(todayDateObj().getDate() - 1)));
+  if (DATA.lastTodoDate === yesterday) { DATA.todoStreak++; } 
+  else if (DATA.lastTodoDate !== today) { DATA.todoStreak = 1; }
+  DATA.lastTodoDate = today;
+
+  const doneCount = DATA.todos.filter(t=>t.done).length;
+  const todoHabit = DATA.habits.todo;
+  if(doneCount >= 3 && todoHabit && !todoHabit.done){ toggleHabit('todo'); }
+  saveData();
+  render();
+}
+
+function setTodoFilter(filter) { todoFilter = filter; renderTodo(); }
+
+function simulateDayAdvance() {
+    const today = todayDateObj();
+    const todayStr = dateStr(today);
+
+    // PERUBAHAN: Logika pengecekan XP Surge
+    if (DATA.xpHistory[todayStr] && DATA.xpHistory[todayStr] >= 200) {
+        DATA.highXpDaysCount = (DATA.highXpDaysCount || 0) + 1;
+    }
+
+    const yesterday = dateStr(today);
+    DATA.dayOffset++;
+    
+    if (DATA.lastMainQuestDate !== yesterday) DATA.mainQuestStreak = 0;
+    if (DATA.lastHabitsDate !== yesterday) DATA.habitsStreak = 0;
+    if (DATA.lastTodoDate !== yesterday) DATA.todoStreak = 0;
+
+    HABITS.forEach(h => { if (DATA.habits[h.id]) DATA.habits[h.id].done = false; });
+    DATA.todos = [];
+    saveData();
+    render();
+}
+
+function prevMonth(){ const d = new Date(calendarView.year, calendarView.month-1,1); calendarView.year=d.getFullYear(); calendarView.month=d.getMonth(); renderCalendar(); }
+function nextMonth(){ const d = new Date(calendarView.year, calendarView.month+1,1); calendarView.year=d.getFullYear(); calendarView.month=d.getMonth(); renderCalendar(); }
+
+function resetData(){ if(!confirm('Reset semua data? Tindakan ini akan menghapus semua progres Anda.')) return; localStorage.removeItem(STORAGE_KEY); location.reload(); }
+
+// INISIALISASI APLIKASI
+render();
+</script>
+</body>
+</html>
