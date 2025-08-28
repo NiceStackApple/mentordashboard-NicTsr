@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>MentorDashboard — Final (XP Surge Update)</title>
+<title>MentorDashboard — Final (Laporan Mingguan)</title>
 <style>
   :root{ --bg:#0b0b0c; --card:#111; --muted:#9aa0a6; --accent:#8b5cf6; --glass:rgba(255,255,255,0.03); }
   *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;font-size:14px;color:#e6eef8}
@@ -21,6 +21,7 @@
   button.primary{background:linear-gradient(90deg,var(--accent), #6366f1);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .2s ease}
   .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;cursor:pointer;transition:all .2s ease}
   button.btn:hover, button.primary:hover, .btn-ghost:hover{background:rgba(139,92,246,0.12);border-color:var(--accent);transform:translateY(-2px)}
+  button.btn:active, button.primary:active, .btn-ghost:active{transform:translateY(0); transition: transform 0.1s;}
   button:disabled{opacity:.5;cursor:not-allowed;transform:none}
   button:disabled:hover{transform:none;background:inherit;border-color:inherit}
   .small{font-size:13px;color:var(--muted)}
@@ -45,24 +46,87 @@
   .calendar{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
   .month-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-  .cell{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;background:transparent}
+  .cell{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;background:transparent; cursor: pointer; transition: all 0.2s ease;}
   .cell:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.6)}
   .cell.active{background:linear-gradient(90deg,#05966933,#06b6d433);border:1px solid rgba(6,182,212,0.25);font-weight:700;color:#fff}
   .cell.today{box-shadow:0 6px 18px rgba(99,102,241,0.08);border:1px solid var(--accent);}
+  .cell.selected{background:var(--accent);border-color:rgba(255,255,255,0.4);font-weight:700;color:#fff;}
   .legend{display:flex;gap:6px;align-items:center;margin-top:8px}
   .dot{width:10px;height:10px;border-radius:99px;background:#10b981}
-  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#081018;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);min-width:300px;z-index:60}
-  .overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:50}
+  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#18181b;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);width:95%;max-width:500px;z-index:60; box-shadow: 0 10px 40px rgba(0,0,0,0.5);}
+  .overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:50; backdrop-filter: blur(4px);}
   .tabs{display:flex;gap:8px;margin-top:12px;margin-bottom:8px;}
   .notification{position:fixed;bottom:20px;right:20px;background:linear-gradient(90deg,var(--accent), #6366f1);padding:12px 18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:100;opacity:0;transform:translateY(20px);transition:all .3s ease}
   .notification.show{opacity:1;transform:translateY(0)}
   .todo-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-  .todo-item{display:flex;gap:8px;align-items:center}
-  .todo-item input[type="checkbox"]{width:18px;height:18px}
-  input[type="text"]{background: var(--glass);border: 1px solid rgba(255,255,255,0.1);color: #e6eef8;padding: 8px 12px;border-radius: 8px;width: 100%;transition: all 0.2s ease;}
-  input[type="text"]:focus {outline: none;border-color: var(--accent);box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);}
+  .todo-item{display:flex;gap:12px;align-items:center; background:var(--glass); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); cursor:pointer}
+  .todo-item:hover{background:rgba(255,255,255,0.05); border-color:var(--accent);}
+  .todo-item input[type="checkbox"]{width:18px;height:18px; cursor:pointer;}
+  input[type="text"], select, textarea{background: var(--glass);border: 1px solid rgba(255,255,255,0.1);color: #e6eef8;padding: 8px 12px;border-radius: 8px;width: 100%;transition: all 0.2s ease;}
+  input[type="text"]:focus, select:focus, textarea:focus {outline: none;border-color: var(--accent);box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);}
   .today{font-weight:700;color:#fff; font-size: 18px;}
   .levelpill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;font-weight:700}
+  .deadline-tag { font-size: 11px; padding: 3px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); margin-left: auto; white-space:nowrap; }
+  .deadline-tag.overdue { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+  label {margin-left: 2px;}
+  .input-like-field { display: flex; align-items: center; gap: 8px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+  .input-like-field:hover { border-color: var(--accent); }
+  .input-like-field .clear-btn { margin-left:auto; padding:0 4px; font-size: 16px; background: transparent; border: 0; color: var(--muted); cursor: pointer; }
+  .input-like-field .clear-btn:hover { color: #fff; }
+
+  /* Custom Dropdown Styles */
+  .custom-dropdown { position: relative; width: 100%; user-select: none; }
+  .dropdown-selected-value { display: flex; align-items: center; justify-content: space-between; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; }
+  .dropdown-selected-value:hover, .custom-dropdown.open .dropdown-selected-value { border-color: var(--accent); }
+  .dropdown-selected-value::after { content: '▾'; color: var(--muted); }
+  .dropdown-options { display: none; position: absolute; top: 105%; left: 0; width: 100%; background: #1c1c1f; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; z-index: 70; max-height: 200px; overflow-y: auto; }
+  .custom-dropdown.open .dropdown-options { display: block; }
+  .dropdown-option { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; cursor: pointer; }
+  .dropdown-option:hover { background-color: var(--accent); }
+  .dropdown-option .stars { color: var(--muted); }
+  .dropdown-option:hover .stars { color: #fff; }
+  
+  /* Quote of the day style */
+  .quote-card {
+    background: var(--glass);
+    border: 1px solid rgba(255,255,255,0.03);
+    padding: 16px;
+    border-radius: 10px;
+    margin-top: 14px;
+    text-align: center;
+  }
+  .quote-text {
+    font-style: italic;
+    color: #e6eef8;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .quote-author {
+    margin-top: 10px;
+    font-weight: bold;
+    color: var(--accent);
+  }
+
+  /* Activity Log Styles */
+  #activityLogContainer::-webkit-scrollbar { width: 4px; }
+  #activityLogContainer::-webkit-scrollbar-track { background: transparent; }
+  #activityLogContainer::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  #activityLogContainer::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  .log-item {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .log-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .log-time {
+    flex-shrink: 0;
+  }
+
 </style>
 </head>
 <body>
@@ -104,9 +168,9 @@
         <div class="kecil muted">Easy +5 • Medium +10 • Hard +15</div>
       </div>
       <div class="row">
-        <button class="btn" onclick="completeAcademic('Easy')">Latihan</button>
-        <button class="btn" onclick="completeAcademic('Medium')">Review Materi</button>
-        <button class="btn" onclick="completeAcademic('Hard')">Materi Baru</button>
+        <button class="btn" onclick="completeAcademic('Easy', false)">Latihan</button>
+        <button class="btn" onclick="completeAcademic('Medium', false)">Review Materi</button>
+        <button class="btn" onclick="completeAcademic('Hard', false)">Materi Baru</button>
         <button class="btn" onclick="resetData()">Reset Data</button>
       </div>
     </section>
@@ -116,6 +180,17 @@
         <div class="small">Grafik XP Mingguan</div>
         <canvas id="xpChart" width="760" height="140" style="width:100%;height:140px;border-radius:8px;background:transparent"></canvas>
       </div>
+    </section>
+
+    <section id="quoteSection" class="quote-card">
+        <p id="quoteText" class="quote-text">...</p>
+        <p id="quoteAuthor" class="quote-author">- ...</p>
+    </section>
+
+    <section class="card" style="margin-top: 18px; padding: 16px;">
+        <h3 style="margin-top:0; margin-bottom: 12px; font-size: 16px;">Log Aktivitas</h3>
+        <div id="activityLogContainer" class="flexcol" style="gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 10px;">
+        </div>
     </section>
   </div>
 
@@ -153,12 +228,21 @@
       </div>
       <div style="margin-top:8px">
         <div style="display:flex;gap:8px">
-          <input id="newTodo" placeholder="Tambah tugas..." type="text" onkeydown="if(event.key==='Enter') addTodo()"/>
-          <button class="btn" onclick="addTodo()">Add</button>
+          <button class="btn primary" style="width:100%" onclick="addTodo()">+ Add To Do</button>
         </div>
-        <div class="tabs">
-          <button class="btn primary" id="btnPending" onclick="setTodoFilter('pending')">Pending</button>
-          <button class="btn" id="btnDone" onclick="setTodoFilter('done')">Done</button>
+        <div class="row" style="justify-content:space-between; align-items:center;">
+            <div class="tabs">
+              <button class="btn primary" id="btnPending" onclick="setTodoFilter('pending')">Pending</button>
+              <button class="btn" id="btnDone" onclick="setTodoFilter('done')">Done</button>
+            </div>
+            <div id="sort-dropdown" class="custom-dropdown" style="width: 150px;">
+              <div id="sort-selected-value" class="dropdown-selected-value" style="padding: 6px 10px; font-size:13px;">Sort: Recent</div>
+              <div id="sort-options" class="dropdown-options">
+                <div class="dropdown-option" data-value="recent">Recent</div>
+                <div class="dropdown-option" data-value="deadline_asc">Deadline Terdekat</div>
+                <div class="dropdown-option" data-value="deadline_desc">Deadline Terlama</div>
+              </div>
+            </div>
         </div>
         <div class="todo-list" id="todoList"></div>
       </div>
@@ -166,47 +250,138 @@
   </aside>
 </div>
 
+<!-- ================================== MODAL EDIT TODO ================================== -->
+<div id="editTodoModal" style="display:none;">
+  <div class="overlay" onclick="closeEditModal()"></div>
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+      <h3 id="modal-title" style="margin:0;">Edit To Do</h3>
+      <div>
+        <button class="btn" onclick="closeEditModal()">Cancel</button>
+        <button class="primary" onclick="saveTodo()">Save</button>
+      </div>
+    </div>
+
+    <div>
+      <label class="small muted">Title*</label>
+      <input id="todo-title" type="text" placeholder="Add a title" style="margin-top:4px;"/>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label class="small muted">Notes</label>
+      <textarea id="todo-notes" placeholder="Add notes (Markdown supported)" rows="3" style="margin-top:4px; resize: vertical;"></textarea>
+    </div>
+
+    <div class="row" style="margin-top:12px; align-items: flex-end;">
+        <div style="flex:1">
+            <label class="small muted">Deadline</label>
+            <div id="todo-deadline-container" class="input-like-field" style="margin-top:4px;" onclick="toggleCalendarPicker()">
+                <span style="color:var(--muted)">📅</span>
+                <span id="todo-deadline-text" style="flex:1;">No date set</span>
+                <button id="clear-deadline-btn" class="clear-btn" onclick="clearDeadline(event)">×</button>
+            </div>
+        </div>
+        <div style="flex:1">
+            <label class="small muted">Difficulty</label>
+            <div id="custom-difficulty-dropdown" class="custom-dropdown" style="margin-top:4px;">
+              <div id="difficulty-selected-value" class="dropdown-selected-value"></div>
+              <div id="difficulty-options" class="dropdown-options">
+                <div class="dropdown-option" data-value="Trivial">Trivial <span class="stars">✦</span></div>
+                <div class="dropdown-option" data-value="Easy">Easy <span class="stars">✦✦</span></div>
+                <div class="dropdown-option" data-value="Medium">Medium <span class="stars">✦✦✦</span></div>
+                <div class="dropdown-option" data-value="Hard">Hard <span class="stars">✦✦✦✦</span></div>
+              </div>
+            </div>
+            <input type="hidden" id="todo-difficulty-value">
+        </div>
+    </div>
+
+    <div id="todo-calendar-picker" class="calendar" style="display:none; margin-top:8px;">
+        <div class="month-head">
+            <div class="small" id="deadlineMonthLabelModal">Bulan</div>
+            <div style="display:flex;gap:6px">
+                <button class="btn-ghost" onclick="prevDeadlineMonth()">‹</button>
+                <button class="btn-ghost" onclick="nextDeadlineMonth()">›</button>
+            </div>
+        </div>
+        <div class="grid" id="deadlineCalGridModal"></div>
+    </div>
+    
+    <div id="delete-todo-area" style="margin-top:24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top:16px; text-align:right;">
+        <button class="btn" style="color:#fca5a5; border-color:rgba(239, 68, 68, 0.4);" onclick="deleteTodoInModal()">Delete this To Do</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================== MODAL LOG HARIAN ================================== -->
+<div id="dailyLogModal" style="display:none;">
+  <div class="overlay" onclick="closeDailyLogModal()"></div>
+  <div class="modal" style="max-width: 400px;">
+    <h3 id="dailyLogTitle" style="margin-top:0;"></h3>
+    <div id="dailyLogContent" class="flexcol" style="gap: 12px;"></div>
+    <div style="text-align:right; margin-top: 16px;">
+        <button class="btn" onclick="closeDailyLogModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================== MODAL LAPORAN MINGGUAN ================================== -->
+<div id="weeklyReportModal" style="display:none;">
+  <div class="overlay" onclick="closeWeeklyReportModal()"></div>
+  <div class="modal" style="max-width: 450px;">
+    <h3 style="margin-top:0;">📊 Laporan Mingguan</h3>
+    <p class="small" id="weeklyReportDateRange"></p>
+    <div id="weeklyReportContent" class="flexcol" style="gap: 12px; margin-top: 16px;"></div>
+    <div style="text-align:right; margin-top: 20px;">
+        <button class="primary" onclick="closeWeeklyReportModal()">Mantap, Lanjutkan!</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
 // ===================================================================================
 // ============================= DATABASE & KONFIGURASI ==============================
 // ===================================================================================
 
+const QUOTES_DB = {
+  "Agusleo Halim": [
+    "Bisnis itu bukan soal ide doang, tapi soal eksekusi tanpa henti.", "Kalau lu takut gagal, lu bakal gagal terus tanpa mulai.", "Lu nggak bisa kaya cuma dari nabung, lu harus berani investasi.", "Network lu itu lebih berharga daripada tabungan lu.", "Orang malas selalu kalah sama orang konsisten.", "Kalau lu nggak mau belajar, siap-siap dibodohi orang lain.", "Lu harus jadi problem solver, bukan cuma pengeluh.", "Semua orang bisa mulai kecil, tapi nggak semua orang mau mikir besar.", "Banyak orang nunggu momen yang pas, padahal momen yang pas itu dibikin.", "Bisnis yang bagus itu bukan yang keren, tapi yang menghasilkan.", "Orang sukses fokus cari solusi, orang gagal sibuk nyalahin keadaan.", "Kalau lu nggak bisa ngatur duit kecil, lu nggak akan pernah pegang duit besar.", "Mental pengusaha itu tahan banting, bukan baperan.", "Lu nggak bisa nyenengin semua orang, tapi lu bisa bikin mereka respek sama kerja keras lu.", "Modal terbesar itu bukan uang, tapi mindset.", "Orang biasa pikir hasil, pengusaha pikir proses.", "Kalau lu pengen hasil beda, jangan ulang kebiasaan lama.", "Orang sukses itu bukan yang paling pinter, tapi yang paling tahan lama.", "Bisnis gagal itu wajar, yang nggak wajar itu lu nyerah terlalu cepet.", "Uang itu hasil sampingan dari value yang lu kasih ke orang.", "Kalau lu nggak bisa jual, lu nggak bisa bisnis.", "Kesempatan itu nggak hilang, dia pindah ke orang lain yang lebih siap.", "Banyak orang mau kaya, tapi dikit yang siap capek.", "Kalau nggak rela berkorban, jangan mimpi hasil besar.", "Mindset miskin bikin lu miskin, mindset kaya bikin lu cari cara."
+  ],
+  "Ferry Irwandi": [
+    "Lu harus tahan banting, hidup nggak akan selalu sesuai rencana.", "Nggak ada shortcut, yang ada cuma kerja keras tiap hari.", "Kalau nggak disiplin, lu bakal keok sama keadaan.", "Hasil itu nggak instan, sabar sambil gas terus.", "Orang gagal nyari alasan, orang sukses nyari cara.", "Kalau mental lu lemah, jangan harap bisa jadi pemenang.", "Sukses itu hak semua orang, tapi cuma buat yang mau berjuang.", "Lu mau dihargai orang? Buktiin dulu dengan hasil.", "Nggak semua orang dukung lu, tapi jangan biarin itu nge-rem lu.", "Bangun pagi bukan buat gaya-gayaan, tapi biar selangkah lebih depan.", "Kegagalan itu latihan, bukan alasan berhenti.", "Kalau lu nggak bisa tahan capek, lu bakal tahan miskin.", "Nggak semua orang bisa ngerti perjuangan lu, tapi hasil nggak bisa dibantah.", "Kerja keras itu wajib, tapi cerdas itu pelengkap.", "Kalau nggak punya mimpi, lu cuma jadi pion orang lain.", "Setiap kali lu males, ingat ada orang lain yang lagi kerja keras ambil kesempatan lu.", "Disiplin itu sakit, tapi penyesalan lebih sakit.", "Lu nggak butuh motivasi tiap hari, lu butuh komitmen.", "Kesuksesan itu nggak dateng ke orang manja.", "Kalau lu berhenti sekarang, semua capek lu kemarin sia-sia.", "Orang kuat bukan yang nggak jatuh, tapi yang bangkit tiap kali jatuh.", "Lu nggak harus sempurna, lu cuma harus konsisten.", "Kalau mau gampang, hidup lu bakal susah. Kalau mau susah, hidup lu bakal gampang.", "Nggak semua orang sukses itu jenius, tapi semua orang sukses itu rajin.", "Lu harus kerja kayak nggak ada besok, biar hasilnya kerasa."
+  ],
+  "Raymond Chin": [
+    "Data nggak bohong, tapi lu seringnya males baca data.", "Kalau lu nggak ngerti duit, duit nggak bakal ngerti lu.", "Investasi itu bukan buat yang kaya, tapi biar lu bisa kaya.", "Jangan gambling, analisa dulu baru action.", "Hidup itu bukan feeling, tapi decision yang logis.", "Kalau lu cuma ikut-ikutan, jangan heran kalau nyesel belakangan.", "Risiko itu ada, tapi bisa diminimalisir kalau lu ngerti ilmunya.", "Lu nggak bisa ngatur apa yang nggak lu ukur.", "Orang pintar itu bukan yang banyak teori, tapi yang bisa eksekusi pakai logika.", "Kalau lu mau aman doang, lu bakal stuck di tempat.", "Financial freedom itu bukan mimpi, itu matematika.", "Kalau pengeluaran lu lebih gede dari pemasukan, jangan salahin ekonomi.", "Banyak orang mau kaya, tapi nggak mau belajar finance basic.", "Diversifikasi itu bukan gaya-gayaan, tapi biar lu nggak panik kalau rugi.", "Warren Buffett juga mulai dari kecil, bedanya dia konsisten.", "Kalau lu pengen return besar tanpa risiko, lu lagi halu.", "Decision terbaik itu berdasarkan data, bukan emosi.", "Banyak orang takut gagal, padahal gagal itu bagian dari statistik.", "Kalau lu nggak ngerti sesuatu, jangan invest di situ.", "Orang sukses ngerti cara bikin uang kerja buat dia.", "Belajar finance itu skill seumur hidup, bukan sekali jadi.", "Kalau lu males mikir jangka panjang, jangan mimpi bebas finansial.", "Orang gagal sibuk flexing, orang sukses sibuk compounding.", "Kalau lu nggak punya plan, lu lagi rencanain gagal.", "Uang itu alat, jangan jadi budak alat."
+  ],
+  "Timothy Ronald": [
+    "Bro, lu jangan cuma jadi penonton, hidup lu tuh film utama.", "Kalau lu kebanyakan scroll, kapan lu ngejalanin mimpi lu?", "Anak muda sekarang sibuk gaya, lupa nabung buat masa depan.", "Kalau lu nggak mulai sekarang, besok lu bakal nyesel.", "Mending capek ngejar mimpi, daripada capek nyesel.", "Bro, lu nggak harus kaya dulu buat mulai, mulai aja dulu.", "Kalau lu males, inget aja tagihan nggak bakal nunggu.", "Hidup itu sekali, jangan buang buat hal receh.", "Lu terlalu banyak mikir, akhirnya nggak ngapa-ngapain.", "Kalau lu masih takut omongan orang, berarti lu belum merdeka.", "Lu nggak bakal sukses kalau mindset lu masih pengen instan.", "Kalau lu sibuk nge-judge orang, berarti lu nggak sibuk nge-upgrade diri.", "Bro, hidup bukan kompetisi flexing, tapi kompetisi value.", "Kalau lu cuma rebahan, jangan heran kalau hasil lu juga rebahan.", "Lebih baik salah karena coba, daripada nggak pernah nyoba.", "Lu nggak usah cari validasi, hasil lu yang bakal validasi diri lu.", "Kalau lu mau beda, siap-siap dikatain. Biasa itu.", "Bro, kesempatan nggak ngetuk pintu dua kali.", "Kalau lu masih nunda, sadar aja: waktu nggak bisa di-refund.", "Anak muda harus berani gagal, biar tau rasanya belajar.", "Kalau lu nggak belajar skill baru, lu bakal ketinggalan.", "Lu bisa pilih: lu kerja buat mimpi orang, atau orang kerja buat mimpi lu.", "Banyak yang sibuk iri, padahal nggak sibuk improve diri.", "Bro, kalau lu nggak tahan kritik, lu nggak bakal tahan sukses.", "Mending dihina gara-gara berjuang, daripada dihina gara-gara nyerah."
+  ]
+};
+
 const BADGE_DATABASE = {
-  // 1. To-do Streak
   'todo_streak_3':   { icon: '🔥', title: 'On Fire', desc: 'Menyelesaikan to-do 3 hari beruntun.', trigger: { type: 'todo_streak', value: 3 } },
   'todo_streak_7':   { icon: '🎯', title: 'Focused', desc: 'Menyelesaikan to-do 7 hari beruntun.', trigger: { type: 'todo_streak', value: 7 } },
   'todo_streak_30':  { icon: '⚡', title: 'Consistent', desc: 'Menyelesaikan to-do 30 hari beruntun.', trigger: { type: 'todo_streak', value: 30 } },
-  // 2. Task Completion
   'todo_total_10':   { icon: '✅', title: 'Task Initiator', desc: 'Menyelesaikan total 10 to-do.', trigger: { type: 'total_todos', value: 10 } },
   'todo_total_50':   { icon: '📈', title: 'Task Executor', desc: 'Menyelesaikan total 50 to-do.', trigger: { type: 'total_todos', value: 50 } },
   'todo_total_100':  { icon: '🚀', title: 'Task Master', desc: 'Menyelesaikan total 100 to-do.', trigger: { type: 'total_todos', value: 100 } },
-  // 3. Habits Streak
   'habit_streak_7':  { icon: '🌱', title: 'Seed of Discipline', desc: 'Menyelesaikan semua habit 7 hari beruntun.', trigger: { type: 'habit_streak', value: 7 } },
   'habit_streak_30': { icon: '🌳', title: 'Tree of Habit', desc: 'Menyelesaikan semua habit 30 hari beruntun.', trigger: { type: 'habit_streak', value: 30 } },
-  // 4. Level Badges
   'level_10':  { icon: '🛠️', title: 'Apprentice', desc: 'Mencapai Level 10.', trigger: { type: 'level', value: 10 } },
   'level_25':  { icon: '🎓', title: 'Specialist', desc: 'Mencapai Level 25.', trigger: { type: 'level', value: 25 } },
   'level_50':  { icon: '👨‍🏫', title: 'Mentor', desc: 'Mencapai Level 50.', trigger: { type: 'level', value: 50 } },
-  // 5. Academic Quest
   'aq_total_10':   { icon: '📖', title: 'Bookworm', desc: 'Menyelesaikan 10 Quest Akademik.', trigger: { type: 'total_aq', value: 10 } },
   'aq_total_50':   { icon: '🧑‍🔬', title: 'Researcher', desc: 'Menyelesaikan 50 Quest Akademik.', trigger: { type: 'total_aq', value: 50 } },
   'aq_total_100':  { icon: '🎓', title: 'Scholar', desc: 'Menyelesaikan 100 Quest Akademik.', trigger: { type: 'total_aq', value: 100 } },
-  // 6. PERUBAHAN: Kategori Badge XP Surge
-  'xp_surge_1':   { icon: '�', title: 'XP Surge', desc: 'Mendapatkan >200 XP dalam sehari.', trigger: { type: 'high_xp_days', value: 1 } },
-  'xp_surge_5':   { icon: '🌠', title: 'XP Comet', desc: 'Mencapai 5 hari XP Surge.', trigger: { type: 'high_xp_days', value: 5 } },
-  'xp_surge_15':  { icon: '🌟', title: 'XP Supernova', desc: 'Mencapai 15 hari XP Surge.', trigger: { type: 'high_xp_days', value: 15 } },
-  'xp_surge_30':  { icon: '🌌', title: 'XP Galaxy', desc: 'Mencapai 30 hari XP Surge.', trigger: { type: 'high_xp_days', value: 30 } },
 };
-
 const BADGE_CATEGORIES = {
     'todo_streak': {title: 'To-do Streak', keys: ['todo_streak_3', 'todo_streak_7', 'todo_streak_30']},
     'total_todos': {title: 'Task Completion', keys: ['todo_total_10', 'todo_total_50', 'todo_total_100']},
     'habit_streak': {title: 'Habits Streak', keys: ['habit_streak_7', 'habit_streak_30']},
     'level': {title: 'Level Up', keys: ['level_10', 'level_25', 'level_50']},
     'total_aq': {title: 'Academic Quests', keys: ['aq_total_10', 'aq_total_50', 'aq_total_100']},
-    'high_xp_days': {title: 'XP Surge', keys: ['xp_surge_1', 'xp_surge_5', 'xp_surge_15', 'xp_surge_30']},
 };
-
 const HABITS = [
   {id:'sholat', label:'Sholat 5 Waktu', desc: 'Menjaga rutinitas ibadah & disiplin waktu.', xp:5},
   {id:'olahraga', label:'Olahraga 20 Menit', desc: 'Aktivitas fisik untuk kesehatan & energi.', xp:5},
@@ -216,7 +391,6 @@ const HABITS = [
   {id:'todo', label:'Selesaikan 3 To-do List', desc: 'Minimal 3 tugas selesai agar produktif.', xp:5},
   {id:'journal', label:'Journaling', desc: 'Menulis refleksi singkat di malam hari.', xp:5}
 ];
-
 const focusMap = {
   'Senin': 'MTK — Selesaikan 20 soal',
   'Kamis': 'MTK — Selesaikan 20 soal',
@@ -227,33 +401,94 @@ const focusMap = {
   'Minggu': 'Review ringan / ringkasan mingguan'
 };
 
-const STORAGE_KEY = 'mentor_dashboard_v6_data'; // Versi baru
+const CURRENT_STORAGE_KEY = 'mentor_dashboard_v10_log'; // Kunci penyimpanan saat ini
+const PREVIOUS_STORAGE_KEYS = ['mentor_dashboard_v9_log', 'mentor_dashboard_v8_data', 'mentor_dashboard_v7_data', 'mentor_dashboard_v6_data'];
+
 let DATA = loadData();
 let todoFilter = 'pending';
+let todoSortOrder = 'recent';
 let calendarView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+
+let editingTodoIndex = null;
+let selectedDeadline = null;
+let deadlineCalendarView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+
 
 // ===================================================================================
 // ============================= FUNGSI DATA & UTILITAS ==============================
 // ===================================================================================
 
-function loadData(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw) return JSON.parse(raw);
-  const init = {
-    xp:0, level:1, dayOffset:0,
-    mainQuestStreak: 0, lastMainQuestDate: null,
-    habitsStreak: 0, lastHabitsDate: null,
-    todoStreak: 0, lastTodoDate: null,
-    totalTodosCompleted: 0,
-    totalAcademicQuestsCompleted: 0,
-    highXpDaysCount: 0, // PERUBAHAN: Mengganti perfectDaysCount
-    unlockedBadges: [],
-    habits:{}, todos: [], xpHistory: {}, dailyHabits: {}
-  };
-  HABITS.forEach(h=> init.habits[h.id] = {done:false});
-  return init;
+function getInitialDataStructure() {
+    const init = {
+        xp:0, level:1, dayOffset:0,
+        mainQuestStreak: 0, lastMainQuestDate: null,
+        habitsStreak: 0, lastHabitsDate: null,
+        todoStreak: 0, lastTodoDate: null,
+        totalTodosCompleted: 0,
+        totalAcademicQuestsCompleted: 0,
+        unlockedBadges: [],
+        habits:{}, 
+        todoLog: [],
+        academicQuestLog: [],
+        activityLog: [],
+        xpHistory: {}, 
+        dailyHabits: {},
+        lastVisitDate: null,
+        lastWeeklyReportDate: null
+    };
+    HABITS.forEach(h=> init.habits[h.id] = {done:false});
+    return init;
 }
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
+
+function migrateData(oldData) {
+    console.log("Memulai migrasi data lama...");
+    const newData = getInitialDataStructure();
+    
+    Object.keys(newData).forEach(key => {
+        if (oldData.hasOwnProperty(key)) {
+            newData[key] = oldData[key];
+        }
+    });
+
+    if (oldData.todos && Array.isArray(oldData.todos)) {
+        newData.todoLog = oldData.todos.map((todo, index) => ({
+            id: Date.now() + index,
+            title: todo.text || todo.title || 'Untitled Task',
+            notes: todo.notes || '',
+            difficulty: todo.difficulty || 'Easy',
+            deadline: todo.deadline || null,
+            createdDate: dateStr(new Date()),
+            completedDate: todo.done ? dateStr(new Date()) : null,
+            status: todo.done ? 'done' : 'pending'
+        }));
+    }
+    
+    console.log("Migrasi selesai.", newData);
+    return newData;
+}
+
+function loadData(){
+    const currentDataRaw = localStorage.getItem(CURRENT_STORAGE_KEY);
+    if (currentDataRaw) {
+        return JSON.parse(currentDataRaw);
+    }
+
+    for (const oldKey of PREVIOUS_STORAGE_KEYS) {
+        const oldDataRaw = localStorage.getItem(oldKey);
+        if (oldDataRaw) {
+            console.log(`Data lama ditemukan dengan kunci: ${oldKey}`);
+            const oldData = JSON.parse(oldDataRaw);
+            const migratedData = migrateData(oldData);
+            localStorage.setItem(CURRENT_STORAGE_KEY, JSON.stringify(migratedData));
+            localStorage.removeItem(oldKey);
+            return migratedData;
+        }
+    }
+    
+    return getInitialDataStructure();
+}
+
+function saveData(){ localStorage.setItem(CURRENT_STORAGE_KEY, JSON.stringify(DATA)); }
 function todayDateObj(){ const d = new Date(); d.setDate(d.getDate() + (DATA.dayOffset||0)); return d; }
 
 function dateStr(d) {
@@ -264,6 +499,15 @@ function dateStr(d) {
 }
 
 function computeLevel(xp){ return Math.floor(xp/100)+1; }
+
+function getDifficultyXP(difficulty) {
+    const xpMap = {'Trivial': 2, 'Easy': 5, 'Medium': 10, 'Hard': 15};
+    return xpMap[difficulty] || 0;
+}
+function getDifficultyStars(difficulty) {
+    const starMap = {'Trivial': '✦', 'Easy': '✦✦', 'Medium': '✦✦✦', 'Hard': '✦✦✦✦'};
+    return starMap[difficulty] || '';
+}
 
 // ===================================================================================
 // ============================= FUNGSI-FUNGSI RENDER UTAMA ==========================
@@ -291,6 +535,8 @@ function render(){
   renderTodo();
   renderCalendar();
   renderChart();
+  renderQuote();
+  renderActivityLog();
 }
 
 function renderQuests() {
@@ -299,7 +545,7 @@ function renderQuests() {
     const d = todayDateObj();
     const todayStr = dateStr(d);
     const dayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][d.getDay()];
-    const academicDone = !!(DATA.dailyHabits[todayStr] && DATA.dailyHabits[todayStr].academic);
+    const academicDone = (DATA.dailyHabits[todayStr] && DATA.dailyHabits[todayStr].academic) || false;
     
     const mainQ = document.createElement('div');
     mainQ.className = 'quest';
@@ -367,7 +613,6 @@ function renderBadges() {
             case 'habit_streak': current = DATA.habitsStreak; break;
             case 'level': current = computeLevel(DATA.xp); break;
             case 'total_aq': current = DATA.totalAcademicQuestsCompleted; break;
-            case 'high_xp_days': current = DATA.highXpDaysCount; break;
         }
 
         const b = document.createElement('div');
@@ -384,19 +629,84 @@ function renderTodo() {
     todoList.innerHTML = '';
     document.getElementById('btnPending').classList.toggle('primary', todoFilter === 'pending');
     document.getElementById('btnDone').classList.toggle('primary', todoFilter === 'done');
+    document.getElementById('btnPending').classList.toggle('btn', todoFilter !== 'pending');
+    document.getElementById('btnDone').classList.toggle('btn', todoFilter !== 'done');
+    
+    let processedTodos = DATA.todoLog.map((t, i) => ({...t, originalIndex: i}));
 
-    DATA.todos.forEach((t, i) => {
-        const shouldShow = (todoFilter === 'pending' && !t.done) || (todoFilter === 'done' && t.done);
-        if (shouldShow) {
-            const div = document.createElement('div');
-            div.className = 'todo-item';
-            div.innerHTML = `<input type="checkbox" ${t.done ? 'checked disabled' : ''} onchange="toggleTodo(${i})"/><div style="flex:1;text-decoration:${t.done ? 'line-through' : 'none'};color:${t.done ? '#9aa0a6' : '#e6eef8'}">${t.text}</div><div><button class="btn-ghost" style="padding:4px 8px;font-size:12px" onclick="removeTodo(${i})">x</button></div>`;
-            todoList.appendChild(div);
-        }
+    // 1. Filter
+    processedTodos = processedTodos.filter(t => {
+        if (todoFilter === 'pending') return t.status === 'pending';
+        if (todoFilter === 'done') return t.status === 'done';
+        return true;
     });
-    const pendingCount = DATA.todos.filter(t => !t.done).length;
+
+    // 2. Sort
+    switch (todoSortOrder) {
+        case 'recent':
+            processedTodos.sort((a, b) => b.id - a.id);
+            break;
+        case 'deadline_asc':
+            processedTodos.sort((a, b) => {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            });
+            break;
+        case 'deadline_desc':
+            processedTodos.sort((a, b) => {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(b.deadline) - new Date(a.deadline);
+            });
+            break;
+    }
+
+    processedTodos.forEach(t => {
+        const i = t.originalIndex;
+        const div = document.createElement('div');
+        div.className = 'todo-item';
+        div.onclick = (e) => {
+            if(e.target.type !== 'checkbox') openEditModal(i);
+        };
+        const isDone = t.status === 'done';
+
+        let deadlineHTML = '';
+        if (t.deadline) {
+            let tagClass = 'deadline-tag';
+            const deadlineDate = new Date(t.deadline + 'T00:00:00');
+            const today = new Date(todayDateObj().setHours(0, 0, 0, 0));
+            if (deadlineDate < today && !isDone) {
+                tagClass += ' overdue';
+            }
+            const tagText = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            deadlineHTML = `<span class="${tagClass}">${tagText}</span>`;
+        }
+        
+        let notesPreviewHTML = '';
+        if (t.notes && t.notes.trim() !== '') {
+            const truncatedNotes = t.notes.length > 50 ? t.notes.substring(0, 50) + '...' : t.notes;
+            notesPreviewHTML = `<div class="small muted" style="margin-top:4px; font-size:12px; white-space: pre-wrap;">${truncatedNotes}</div>`;
+        }
+
+        div.innerHTML = `
+            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTodo(${i}, event)"/>
+            <div style="flex:1; display:flex; flex-direction: column; gap: 2px;">
+                <span style="text-decoration:${isDone ? 'line-through' : 'none'}; color:${isDone ? '#9aa0a6' : '#e6eef8'}">${t.title || 'Tanpa Judul'}</span>
+                ${notesPreviewHTML}
+                <div class="row" style="align-items:center; margin-top:4px;">
+                     <span class="small">${getDifficultyStars(t.difficulty)}</span>
+                </div>
+            </div>
+            ${deadlineHTML}
+        `;
+        
+        todoList.appendChild(div);
+    });
+    const pendingCount = DATA.todoLog.filter(t => t.status === 'pending').length;
     document.getElementById('todoCounter').textContent = `${pendingCount} Pending`;
 }
+
 
 function renderCalendar() {
     const grid = document.getElementById('calGrid');
@@ -407,7 +717,7 @@ function renderCalendar() {
     const total = new Date(y,m+1,0).getDate();
     document.getElementById('monthLabel').textContent = first.toLocaleString('id-ID', {month:'long', year:'numeric'});
 
-    for(let i=0;i<startDay;i++){ grid.insertAdjacentHTML('beforeend', '<div class="cell"></div>'); }
+    for(let i=0;i<startDay;i++){ grid.insertAdjacentHTML('beforeend', '<div class="cell" style="cursor:default;"></div>'); }
 
     for(let day=1; day<=total; day++){
         const d = new Date(y,m,day);
@@ -415,6 +725,8 @@ function renderCalendar() {
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.textContent = day;
+        cell.onclick = () => openDailyLogModal(key);
+
         if(key === dateStr(todayDateObj())) cell.classList.add('today');
         const dh = DATA.dailyHabits[key] || {};
         const allDone = HABITS.every(h=> !!dh[h.id]);
@@ -443,9 +755,62 @@ function renderChart() {
   for(let i=0;i<7;i++){ const x = pad + ( (w-2*pad) * (i / 6) ); const y = pad + (h-2*pad) * (1 - (arr[i]/max)); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font='11px Inter'; ctx.fillText(arr[i], x-8, y-10); }
 }
 
+function renderQuote() {
+    const today = todayDateObj();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    
+    const authors = Object.keys(QUOTES_DB);
+    const authorIndex = dayOfYear % authors.length;
+    const author = authors[authorIndex];
+    
+    const quotes = QUOTES_DB[author];
+    const quoteIndex = dayOfYear % quotes.length;
+    const quote = quotes[quoteIndex];
+
+    document.getElementById('quoteText').textContent = `“${quote}”`;
+    document.getElementById('quoteAuthor').textContent = `- ${author}`;
+}
+
+function renderActivityLog() {
+    const container = document.getElementById('activityLogContainer');
+    container.innerHTML = '';
+    if (!DATA.activityLog || DATA.activityLog.length === 0) {
+        container.innerHTML = '<div class="small muted" style="text-align:center;">Belum ada aktivitas tercatat.</div>';
+        return;
+    }
+
+    DATA.activityLog.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'log-item';
+        
+        const date = new Date(entry.timestamp);
+        const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const dateString = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+        div.innerHTML = `
+            <div class="small muted log-time">${dateString}, ${time}</div>
+            <div>${entry.text}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
 // ===================================================================================
 // ======================== FUNGSI AKSI & LOGIC APLIKASI =============================
 // ===================================================================================
+
+function addLogEntry(text) {
+    if (!DATA.activityLog) {
+        DATA.activityLog = [];
+    }
+    DATA.activityLog.unshift({
+        timestamp: new Date().toISOString(),
+        text: text
+    });
+    if (DATA.activityLog.length > 50) {
+        DATA.activityLog.pop();
+    }
+}
 
 function checkAllBadges() {
   const currentLevel = computeLevel(DATA.xp);
@@ -459,7 +824,6 @@ function checkAllBadges() {
       case 'habit_streak': conditionMet = DATA.habitsStreak >= badge.trigger.value; break;
       case 'level': conditionMet = currentLevel >= badge.trigger.value; break;
       case 'total_aq': conditionMet = DATA.totalAcademicQuestsCompleted >= badge.trigger.value; break;
-      case 'high_xp_days': conditionMet = DATA.highXpDaysCount >= badge.trigger.value; break;
     }
     if (conditionMet) unlockBadge(key);
   }
@@ -470,6 +834,7 @@ function unlockBadge(key) {
   DATA.unlockedBadges.push(key);
   const badge = BADGE_DATABASE[key];
   showNotification(`Badge Terbuka: ${badge.icon} ${badge.title}`);
+  addLogEntry(`🏆 Badge Terbuka: <strong>${badge.title}</strong>`);
 }
 
 function showNotification(message) {
@@ -484,15 +849,20 @@ function showNotification(message) {
   }, 4000);
 }
 
-function completeMainQuest() { completeAcademic('Medium'); }
+function completeMainQuest() { completeAcademic('Medium', true); }
 
-function completeAcademic(level) {
+function completeAcademic(level, isMainQuest = false) {
     const today = dateStr(todayDateObj());
     const xpGain = {'Easy':5,'Medium':10,'Hard':15}[level] || 10;
     DATA.xp += xpGain;
     DATA.xpHistory[today] = (DATA.xpHistory[today] || 0) + xpGain;
     DATA.totalAcademicQuestsCompleted++;
     
+    DATA.academicQuestLog.push({ date: today, difficulty: level, xp: xpGain });
+
+    const logText = isMainQuest ? "🎯 Quest Utama Selesai" : `🎓 Academic Quest Selesai: <strong>${level}</strong>`;
+    addLogEntry(logText);
+
     if (!(DATA.dailyHabits[today] && DATA.dailyHabits[today].academic)) {
         const yesterday = dateStr(new Date(new Date().setDate(todayDateObj().getDate() - 1)));
         if (DATA.lastMainQuestDate === yesterday) { DATA.mainQuestStreak++; } 
@@ -517,6 +887,9 @@ function toggleHabit(id) {
   DATA.xp += xpGain;
   DATA.xpHistory[today] = (DATA.xpHistory[today] || 0) + xpGain;
   
+  const habitData = HABITS.find(x => x.id === id);
+  addLogEntry(`⭐ Daily Quest Selesai: <strong>${habitData.label}</strong>`);
+
   const allHabitsDoneToday = HABITS.every(habit => DATA.habits[habit.id] && DATA.habits[habit.id].done);
   if (allHabitsDoneToday) {
     const yesterday = dateStr(new Date(new Date().setDate(todayDateObj().getDate() - 1)));
@@ -529,20 +902,26 @@ function toggleHabit(id) {
 }
 
 function addTodo(){
-  const input = document.getElementById('newTodo');
-  if(!input.value.trim()) return;
-  DATA.todos.push({text:input.value.trim(),done:false});
-  input.value = '';
-  setTodoFilter('pending');
-  saveData();
-  render();
+  openEditModal(null);
 }
 
-function removeTodo(i){ DATA.todos.splice(i,1); saveData(); render(); }
-
-function toggleTodo(i) {
-  if (DATA.todos[i].done) return;
-  DATA.todos[i].done = true;
+function toggleTodo(i, event) {
+  event.stopPropagation(); 
+  const todo = DATA.todoLog[i];
+  if (todo.status === 'done') return; 
+  
+  todo.status = 'done';
+  todo.completedDate = dateStr(todayDateObj());
+  
+  const xpGain = getDifficultyXP(todo.difficulty);
+  if(xpGain > 0){
+      const today = dateStr(todayDateObj());
+      DATA.xp += xpGain;
+      DATA.xpHistory[today] = (DATA.xpHistory[today] || 0) + xpGain;
+      showNotification(`+${xpGain} XP!`);
+  }
+  
+  addLogEntry(`✅ To-do Selesai: <strong>${todo.title}</strong>`);
   DATA.totalTodosCompleted++;
 
   const today = dateStr(todayDateObj());
@@ -551,33 +930,379 @@ function toggleTodo(i) {
   else if (DATA.lastTodoDate !== today) { DATA.todoStreak = 1; }
   DATA.lastTodoDate = today;
 
-  const doneCount = DATA.todos.filter(t=>t.done).length;
+  const doneTodayCount = DATA.todoLog.filter(t => t.completedDate === today).length;
   const todoHabit = DATA.habits.todo;
-  if(doneCount >= 3 && todoHabit && !todoHabit.done){ toggleHabit('todo'); }
+  if(doneTodayCount >= 3 && todoHabit && !todoHabit.done){ toggleHabit('todo'); }
   saveData();
   render();
 }
 
-function setTodoFilter(filter) { todoFilter = filter; renderTodo(); }
+function setTodoFilter(filter) { todoFilter = filter; render(); }
 
-function simulateDayAdvance() {
-    const today = todayDateObj();
-    const todayStr = dateStr(today);
+function setTodoSortOrder(order) {
+    todoSortOrder = order;
+    const selectedValueDiv = document.getElementById('sort-selected-value');
+    const option = document.querySelector(`#sort-options .dropdown-option[data-value="${order}"]`);
+    if(option) {
+        selectedValueDiv.textContent = `Sort: ${option.textContent}`;
+    }
+    render();
+}
 
-    // PERUBAHAN: Logika pengecekan XP Surge
-    if (DATA.xpHistory[todayStr] && DATA.xpHistory[todayStr] >= 200) {
-        DATA.highXpDaysCount = (DATA.highXpDaysCount || 0) + 1;
+// ===================================================================================
+// ============================ FUNGSI MODAL EDIT TO-DO ==============================
+// ===================================================================================
+
+function openEditModal(index) {
+    editingTodoIndex = index;
+    const modal = document.getElementById('editTodoModal');
+    const modalTitle = document.getElementById('modal-title');
+    const deleteArea = document.getElementById('delete-todo-area');
+    document.getElementById('todo-calendar-picker').style.display = 'none';
+
+    if (index === null) { // To-do baru
+        modalTitle.textContent = 'Add To Do';
+        document.getElementById('todo-title').value = '';
+        document.getElementById('todo-notes').value = '';
+        setDifficultyValue('Easy');
+        selectedDeadline = null;
+        updateDeadlineDisplay();
+        deleteArea.style.display = 'none';
+    } else { // Mengedit to-do yang ada
+        modalTitle.textContent = 'Edit To Do';
+        const todo = DATA.todoLog[index];
+        document.getElementById('todo-title').value = todo.title;
+        document.getElementById('todo-notes').value = todo.notes;
+        setDifficultyValue(todo.difficulty);
+        selectedDeadline = todo.deadline;
+        updateDeadlineDisplay();
+        deleteArea.style.display = 'block';
+    }
+    
+    modal.style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editTodoModal').style.display = 'none';
+    editingTodoIndex = null;
+    document.getElementById('custom-difficulty-dropdown').classList.remove('open');
+}
+
+function saveTodo() {
+    const title = document.getElementById('todo-title').value.trim();
+    if (!title) {
+        alert('Judul tidak boleh kosong.');
+        return;
     }
 
-    const yesterday = dateStr(today);
+    const newTodoData = {
+        title: title,
+        notes: document.getElementById('todo-notes').value.trim(),
+        difficulty: document.getElementById('todo-difficulty-value').value,
+        deadline: selectedDeadline,
+    };
+
+    if (editingTodoIndex === null) {
+        DATA.todoLog.push({
+            ...newTodoData,
+            id: Date.now(),
+            createdDate: dateStr(todayDateObj()),
+            completedDate: null,
+            status: 'pending'
+        });
+        addLogEntry(`📝 To-do Dibuat: <strong>${title}</strong>`);
+    } else {
+        const existingTodo = DATA.todoLog[editingTodoIndex];
+        DATA.todoLog[editingTodoIndex] = { ...existingTodo, ...newTodoData };
+    }
+    
+    saveData();
+    render();
+    closeEditModal();
+}
+
+function deleteTodoInModal() {
+    if (editingTodoIndex !== null && confirm('Apakah Anda yakin ingin menghapus To-Do ini? To-do yang dihapus tidak akan masuk ke dalam rekap mingguan.')) {
+        const deletedTodo = DATA.todoLog.splice(editingTodoIndex, 1);
+        addLogEntry(`🗑️ To-do Dihapus: <strong>${deletedTodo[0].title}</strong>`);
+        saveData();
+        render();
+        closeEditModal();
+    }
+}
+
+// -- Fungsi-fungsi untuk Kalender di Modal Edit To-do --
+function toggleCalendarPicker() {
+    const picker = document.getElementById('todo-calendar-picker');
+    picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+    if (picker.style.display === 'block') {
+      const viewDate = selectedDeadline ? new Date(selectedDeadline + 'T00:00:00') : new Date();
+      deadlineCalendarView.year = viewDate.getFullYear();
+      deadlineCalendarView.month = viewDate.getMonth();
+      renderDeadlineCalendarModal();
+    }
+}
+
+function clearDeadline(event) {
+    event.stopPropagation();
+    selectedDeadline = null;
+    updateDeadlineDisplay();
+    document.getElementById('todo-calendar-picker').style.display = 'none';
+}
+
+function updateDeadlineDisplay() {
+    const textDisplay = document.getElementById('todo-deadline-text');
+    const clearBtn = document.getElementById('clear-deadline-btn');
+    if (!selectedDeadline) {
+        textDisplay.textContent = 'No date set';
+        textDisplay.style.color = 'var(--muted)';
+        clearBtn.style.display = 'none';
+    } else {
+        const d = new Date(selectedDeadline + 'T00:00:00');
+        textDisplay.textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        textDisplay.style.color = '#e6eef8';
+        clearBtn.style.display = 'block';
+    }
+}
+
+function selectDeadline(date) {
+    selectedDeadline = date;
+    updateDeadlineDisplay();
+    renderDeadlineCalendarModal();
+    setTimeout(() => { document.getElementById('todo-calendar-picker').style.display = 'none'; }, 200);
+}
+
+function prevDeadlineMonth() {
+    const d = new Date(deadlineCalendarView.year, deadlineCalendarView.month - 1, 1);
+    deadlineCalendarView.year = d.getFullYear();
+    deadlineCalendarView.month = d.getMonth();
+    renderDeadlineCalendarModal();
+}
+
+function nextDeadlineMonth() {
+    const d = new Date(deadlineCalendarView.year, deadlineCalendarView.month + 1, 1);
+    deadlineCalendarView.year = d.getFullYear();
+    deadlineCalendarView.month = d.getMonth();
+    renderDeadlineCalendarModal();
+}
+
+function renderDeadlineCalendarModal() {
+    const grid = document.getElementById('deadlineCalGridModal');
+    grid.innerHTML = '';
+    const y = deadlineCalendarView.year;
+    const m = deadlineCalendarView.month;
+    const first = new Date(y, m, 1);
+    const startDay = first.getDay();
+    const totalDays = new Date(y, m + 1, 0).getDate();
+    document.getElementById('deadlineMonthLabelModal').textContent = first.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+
+    for (let i = 0; i < startDay; i++) {
+        grid.insertAdjacentHTML('beforeend', '<div class="cell" style="cursor:default;"></div>');
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+        const d = new Date(y, m, day);
+        const key = dateStr(d);
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = day;
+        cell.onclick = () => selectDeadline(key);
+
+        if (key === dateStr(todayDateObj())) cell.classList.add('today');
+        if (key === selectedDeadline) cell.classList.add('selected');
+        
+        grid.appendChild(cell);
+    }
+}
+
+
+// -- Fungsi untuk Custom Dropdown --
+function setupDropdown(dropdownId, onSelectCallback) {
+    const dropdown = document.getElementById(dropdownId);
+    const selectedValueDiv = dropdown.querySelector('.dropdown-selected-value');
+    const optionsDiv = dropdown.querySelector('.dropdown-options');
+    
+    selectedValueDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+    });
+
+    optionsDiv.querySelectorAll('.dropdown-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            if(onSelectCallback) {
+                onSelectCallback(value);
+            }
+            dropdown.classList.remove('open');
+        });
+    });
+}
+
+function setDifficultyValue(value) {
+    const hiddenInput = document.getElementById('todo-difficulty-value');
+    const selectedValueDiv = document.getElementById('difficulty-selected-value');
+    const option = document.querySelector(`#custom-difficulty-dropdown .dropdown-option[data-value="${value}"]`);
+    
+    if (option) {
+      hiddenInput.value = value;
+      selectedValueDiv.innerHTML = option.innerHTML;
+    }
+}
+
+document.addEventListener('click', (e) => {
+    document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
+        if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
+        }
+    });
+});
+// ===================================================================================
+
+// -- FUNGSI BARU UNTUK LOG HARIAN --
+function openDailyLogModal(date) {
+    const modal = document.getElementById('dailyLogModal');
+    const title = document.getElementById('dailyLogTitle');
+    const content = document.getElementById('dailyLogContent');
+
+    const d = new Date(date + 'T00:00:00');
+    title.textContent = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    let contentHTML = '';
+    
+    const xpToday = DATA.xpHistory[date] || 0;
+    contentHTML += `<div><strong>XP hari itu:</strong> ${xpToday}</div>`;
+    
+    const dailyHabitsToday = DATA.dailyHabits[date] || {};
+    let habitsHTML = '<div><strong>Daily Quests:</strong><div class="flexcol" style="gap:4px; margin-top:4px; padding-left:10px;">';
+    HABITS.forEach(habit => {
+        const status = dailyHabitsToday[habit.id] ? '<span style="color:#10b981">Done</span>' : '<span style="color:#fca5a5">Not Done</span>';
+        habitsHTML += `<div>${habit.label}: ${status}</div>`;
+    });
+    habitsHTML += '</div></div>';
+    contentHTML += habitsHTML;
+    
+    const academicQuestsToday = DATA.academicQuestLog.filter(q => q.date === date).length;
+    contentHTML += `<div><strong>Academic Quests Selesai:</strong> ${academicQuestsToday}</div>`;
+    
+    const todosDoneToday = DATA.todoLog.filter(t => t.completedDate === date).length;
+    contentHTML += `<div><strong>To-do Selesai:</strong> ${todosDoneToday}</div>`;
+
+    content.innerHTML = contentHTML;
+    modal.style.display = 'block';
+}
+
+function closeDailyLogModal() {
+    document.getElementById('dailyLogModal').style.display = 'none';
+}
+
+// ===================================================================================
+
+function checkForDailyReset() {
+    const todayStr = dateStr(todayDateObj());
+    if (DATA.lastVisitDate !== todayStr) {
+        console.log("Hari baru terdeteksi, mereset daily quests...");
+        HABITS.forEach(h => {
+            if (DATA.habits[h.id]) {
+                DATA.habits[h.id].done = false;
+            }
+        });
+        DATA.lastVisitDate = todayStr;
+
+        // Cek Laporan Mingguan
+        const today = todayDateObj();
+        // getDay() 0=Minggu, 1=Senin
+        if (today.getDay() === 1 && DATA.lastWeeklyReportDate !== todayStr) {
+            showWeeklyReport();
+        }
+        
+        saveData();
+    }
+}
+
+function generateWeeklyReport() {
+    const today = todayDateObj();
+    const lastWeek = new Date(today);
+    lastWeek.setDate(today.getDate() - 7);
+    const lastWeekStr = dateStr(lastWeek);
+
+    let totalXp = 0;
+    let perfectDays = 0;
+    let academicQuestsDone = 0;
+    let todosCreated = 0;
+    let todosCompleted = 0;
+
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const dateKey = dateStr(d);
+
+        totalXp += DATA.xpHistory[dateKey] || 0;
+        
+        const habitsToday = DATA.dailyHabits[dateKey] || {};
+        if (HABITS.every(h => habitsToday[h.id])) {
+            perfectDays++;
+        }
+    }
+
+    academicQuestsDone = DATA.academicQuestLog.filter(q => q.date >= lastWeekStr).length;
+    todosCreated = DATA.todoLog.filter(t => t.createdDate >= lastWeekStr).length;
+    todosCompleted = DATA.todoLog.filter(t => t.completedDate && t.completedDate >= lastWeekStr).length;
+
+    return {
+        startDate: lastWeek,
+        endDate: today,
+        totalXp,
+        perfectDays,
+        academicQuestsDone,
+        todosCreated,
+        todosCompleted
+    };
+}
+
+function showWeeklyReport() {
+    const report = generateWeeklyReport();
+    const modal = document.getElementById('weeklyReportModal');
+    const content = document.getElementById('weeklyReportContent');
+    const dateRange = document.getElementById('weeklyReportDateRange');
+
+    dateRange.textContent = `${report.startDate.toLocaleDateString('id-ID', {day:'numeric', month:'short'})} - ${report.endDate.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'})}`;
+    
+    content.innerHTML = `
+        <div class="row" style="justify-content:space-between;"><span>Total XP Didapat:</span> <strong>${report.totalXp} XP</strong></div>
+        <div class="row" style="justify-content:space-between;"><span>Hari Sempurna (Semua Daily Quest):</span> <strong>${report.perfectDays} / 7 hari</strong></div>
+        <div class="row" style="justify-content:space-between;"><span>Academic Quest Selesai:</span> <strong>${report.academicQuestsDone}</strong></div>
+        <div class="row" style="justify-content:space-between;"><span>To-do Dibuat:</span> <strong>${report.todosCreated}</strong></div>
+        <div class="row" style="justify-content:space-between;"><span>To-do Selesai:</span> <strong>${report.todosCompleted}</strong></div>
+    `;
+
+    modal.style.display = 'block';
+
+    // Reset log dan tandai laporan sudah dibuat
+    DATA.activityLog = [];
+    DATA.lastWeeklyReportDate = dateStr(todayDateObj());
+    addLogEntry("✨ Selamat datang di minggu yang baru! Log aktivitas telah direset.");
+    saveData();
+}
+
+function closeWeeklyReportModal() {
+    document.getElementById('weeklyReportModal').style.display = 'none';
+}
+
+function simulateDayAdvance() {
     DATA.dayOffset++;
     
-    if (DATA.lastMainQuestDate !== yesterday) DATA.mainQuestStreak = 0;
-    if (DATA.lastHabitsDate !== yesterday) DATA.habitsStreak = 0;
-    if (DATA.lastTodoDate !== yesterday) DATA.todoStreak = 0;
+    const today = todayDateObj();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = dateStr(yesterday);
+    
+    if (DATA.lastMainQuestDate !== yesterdayStr) DATA.mainQuestStreak = 0;
+    if (DATA.lastHabitsDate !== yesterdayStr) DATA.habitsStreak = 0;
+    if (DATA.lastTodoDate !== yesterdayStr) DATA.todoStreak = 0;
 
-    HABITS.forEach(h => { if (DATA.habits[h.id]) DATA.habits[h.id].done = false; });
-    DATA.todos = [];
+    // Pindahkan logika reset harian ke fungsi terpusat
+    checkForDailyReset();
+    
     saveData();
     render();
 }
@@ -585,9 +1310,12 @@ function simulateDayAdvance() {
 function prevMonth(){ const d = new Date(calendarView.year, calendarView.month-1,1); calendarView.year=d.getFullYear(); calendarView.month=d.getMonth(); renderCalendar(); }
 function nextMonth(){ const d = new Date(calendarView.year, calendarView.month+1,1); calendarView.year=d.getFullYear(); calendarView.month=d.getMonth(); renderCalendar(); }
 
-function resetData(){ if(!confirm('Reset semua data? Tindakan ini akan menghapus semua progres Anda.')) return; localStorage.removeItem(STORAGE_KEY); location.reload(); }
+function resetData(){ if(!confirm('Reset semua data? Tindakan ini akan menghapus semua progres Anda.')) return; localStorage.removeItem(CURRENT_STORAGE_KEY); PREVIOUS_STORAGE_KEYS.forEach(key => localStorage.removeItem(key)); location.reload(); }
 
 // INISIALISASI APLIKASI
+checkForDailyReset();
+setupDropdown('custom-difficulty-dropdown', setDifficultyValue);
+setupDropdown('sort-dropdown', setTodoSortOrder);
 render();
 </script>
 </body>
